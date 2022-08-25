@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Bouncing balls</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+        }
+        
+        html {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            height: 100%;
+        }
+        
+        body {
+            overflow: hidden;
+            height: inherit;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            letter-spacing: -1px;
+            position: absolute;
+            margin: 0;
+            top: -4px;
+            right: 5px;
+            color: transparent;
+            text-shadow: 0 0 4px white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>bouncing balls</h1>
+    <p>剩餘的彩球</p>
+    <canvas></canvas>
+</body>
+<script>
+    const para = document.querySelector('p');
+    let count = 0;
+    //得到canvas元素
+    const canvas = document.querySelector('canvas');
+    //指定2D畫板
+    const ctx = canvas.getContext('2d');
+    //得到瀏覽器的寬高
+    const width = canvas.width = window.innerWidth;
+    const height = canvas.height = window.innerHeight;
+
+    // 得到指定範圍的數字
+    function random(min, max) {
+        const num = Math.floor(Math.random() * (max - min + 1)) + min;
+        if (num != 0) {
+            return num;
+        } else {
+            const num = Math.floor(Math.random() * (max - min + 1)) + min;
+            return num;
+        }
+
+    }
+
+    // 產生隨機顏色
+    function randomRGB() {
+        return `rgb(${random(0, 255)},${random(0, 255)},${random(0, 255)})`;
+    }
+
+    function shape(x, y, velX, velY, exists) {
+        this.x = x;
+        this.y = y;
+        this.velX = velX;
+        this.velY = velY;
+        this.exists = exists;
+    }
+    //建立球體的構造函數
+    //隨機的X座標
+    //隨機的Y座標
+    //隨機的X軸移動參數
+    //隨機的Y軸移動參數
+    //隨機的顏色
+    //隨機的大小
+    function Ball(x, y, velX, velY, exists) {
+        shape.call(this, x, y, velX, velY, exists);
+        this.color = randomRGB();
+        this.size = random(10, 20);
+    }
+    //球體的原型方法，用來畫出一顆隨機圓形
+    Ball.prototype.draw = function() {
+        ctx.beginPath(); //開始
+        ctx.fillStyle = this.color; //填滿的顏色
+        ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI); //圖形的參數
+        ctx.fill(); //完成
+    }
+
+    //球體的圓形方法，來更新球體的參數
+    Ball.prototype.update = function() {
+        // 當球體往右方移動時碰到邊緣(width)
+        if ((this.x - this.size) >= width) {
+            this.velX = -(this.velX);
+        }
+        // 當球體往左方移動時碰到邊緣(width)
+        if ((this.x - this.size) <= 0) {
+            this.velX = -(this.velX);
+        }
+        // 當球體往上方移動時碰到邊緣(height)
+        if (this.y - this.size <= 0) {
+            this.velY = -(this.velY);
+        }
+        // 當球體往下方移動時碰到邊緣(height)
+        if (this.y + this.size >= height) {
+            this.velY = -(this.velY);
+        }
+
+        this.x += this.velX;
+        this.y += this.velY;
+    }
+    Ball.prototype.collisionDetect = function() {
+        //如果使用for of 的寫法
+        //for(const ball of balls){if(!(this === ball)){.....}}
+        for (j = 0; j < balls.length; j++) {
+            if ((!(this.x === balls[j].x && this.y === balls[j].y && this.velX === balls[j].velX && this.velY === balls[j].velY))) {
+                var dx = this.x - balls[j].x;
+                var dy = this.y - balls[j].y;
+                var distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < this.size + balls[j].size) {
+                    balls[j].color = this.color = randomRGB();
+                }
+            }
+        }
+    }
+
+    //建立惡魔圈
+    function EvilCircle(x, y, exists) {
+        shape.call(this, x, y, 20, 20, exists);
+        this.color = 'white'
+        this.size = 10;
+    }
+    EvilCircle.prototype.draw = function() {
+        ctx.beginPath();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = this.color;
+        ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+    EvilCircle.prototype.checkBounds = function() {
+        if (this.x + this.size >= width) {
+            this.x -= this.size;
+        }
+        if (this.x - this.size <= 0) {
+            this.x += this.size;
+        }
+        if (this.y + this.size >= height) {
+            this.y -= this.size;
+        }
+        if (this.y - this.size <= 0) {
+            this.y += this.size;
+        }
+    }
+    EvilCircle.prototype.setControls = function() {
+        window.onkeydown = e => {
+            switch (e.key) {
+                case 'a':
+                    this.x -= this.velX;
+                    break;
+                case 'd':
+                    this.x += this.velX;
+                    break;
+                case 'w':
+                    this.y -= this.velY;
+                    break;
+                case 's':
+                    this.y += this.velY;
+                    break;
+            }
+        }
+    }
+    EvilCircle.prototype.collisionDetect = function() {
+        //如果使用for of 的寫法
+        //for(const ball of balls){if(!(this === ball)){.....}}
+        for (j = 0; j < balls.length; j++) {
+            if (balls[j].exists) {
+                var dx = this.x - balls[j].x;
+                var dy = this.y - balls[j].y;
+                var distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < this.size + balls[j].size) {
+                    balls[j].exists = false;
+                    count--;
+                    para.textContent = '球數:' + count;
+
+                }
+            }
+        }
+    }
+    let balls = [];
+    let evil = new EvilCircle(random(0, width), random(0, height), true);
+    evil.setControls();
+
+    //建立一個循還用的函示loop()
+    //loop()方法第一次執行時會建立一個balls[]數組包含25的球體物件
+    //要循環的方法包含:
+    //1.不停地更新畫板的方法:ctx.fillRect(0, 0, width, height);
+    //2.不停地使用for循環執行balls[]數組中每一個物件的方法
+    //draw()方法會依照球體物件的參數畫出25個不同的圓形
+    //update()方法會25個球體創造後，增加移動的參數並針對在邊緣的物件更改參數
+    //讓下一次的draw()方法可以畫出移動後的不同圓形
+    //collisionDetect()方法改變重疊的球體的顏色
+    function loop() {
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.fillRect(0, 0, width, height);
+
+        while (balls.length < 25) {
+            let ball = new Ball(random(0, width), random(0, height), random(-1, 2), random(-1, 2), true);
+            balls.push(ball);
+            count++;
+            para.textContent = '球數:' + count;
+        }
+
+        for (let i = 0; i < balls.length; i++) {
+            if (balls[i].exists) {
+                balls[i].draw();
+                balls[i].update();
+                balls[i].collisionDetect();
+            }
+
+        }
+        evil.draw();
+        evil.checkBounds();
+        evil.collisionDetect();
+        //使用for of的寫法
+        // for (const ball of balls) {
+        //     ball.draw();
+        //     ball.update();
+        //     ball.collisionDetect();
+        // }
+        requestAnimationFrame(loop);
+    }
+    loop();
+</script>
+
+</html>
+
+</html>

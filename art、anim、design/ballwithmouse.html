@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="Zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歡迎光臨</title>
+    <style>
+        :root{
+            --mouse-x;
+            --mouse-y;
+            --radius:40px;
+            --factor:1;
+            --scale;
+        }
+        body{
+            background-color: black;
+        }
+        #ball{
+            width: var(--radius);
+            height: var(--radius);
+            border-radius: 50%;
+            background-color: #fbd771;
+            position: absolute;
+            transform:  translate(
+            calc(var(--mouse-x)*1px - var(--radius)/2),
+            calc(var(--mouse-y)*1px - var(--radius)/2)
+            );
+        }
+        .halo{
+            width: var(--radius);
+            height: var(--radius);
+            border-radius: 50%;
+            background-color: #fbd771;
+            position: absolute;
+            opacity: 0.15;
+            transform:  scale(calc(var(--factor)*var(--scale)));
+        }
+        .halo:nth-of-type(1){
+            --factor:0.3;
+        }
+        .halo:nth-of-type(2){
+            --factor:0.5;
+        }
+        .halo:nth-of-type(3){
+            --factor:0.9;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="ball">
+        <div class="halo"></div>
+        <div class="halo"></div>
+        <div class="halo"></div>
+    </div>
+</body>
+<script>
+    let ball_x = 0;
+    let ball_y = 0;
+    let mouse_x = 0;
+    let mouse_y = 0;
+    const delay = 0.15;
+    const drag =0.25;
+    const docStyle = document.documentElement.style; 
+    document.addEventListener("mousemove",e=>{
+        mouse_x = e.clientX;
+        mouse_y = e.clientY;
+        // console.log(mouse_x,mouse_y);
+    });
+    function delayMotion(){
+        let dir_x = mouse_x-ball_x;
+        dir_x *= delay;
+
+        let dir_y = mouse_y-ball_y;
+        dir_y *= delay;
+
+        let vel_x = 0;
+        vel_x*=drag;
+        vel_x +=dir_x;
+
+        let vel_y = 0;
+        vel_y*=drag;
+        vel_y +=dir_y;
+
+        ball_x += dir_x;
+        ball_y += dir_y;
+        docStyle.setProperty("--mouse-x",ball_x);
+        docStyle.setProperty("--mouse-y",ball_y);
+        docStyle.setProperty("--scale",(vel_x + vel_y)*drag);
+        requestAnimationFrame(delayMotion);
+    }
+    delayMotion();
+</script>
+</html>
